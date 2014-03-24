@@ -16,7 +16,7 @@
 @property (strong, nonatomic) CardMatchingGame *game;
 @property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *cardButtons;
 @property (weak, nonatomic) IBOutlet UILabel *scoreLabel;
-
+@property (weak, nonatomic) IBOutlet UISegmentedControl *matchModeSegmentedControl;
 @end
 
 @implementation CardGameViewController
@@ -40,8 +40,8 @@
 {
     int chosenButtonIndex = [self.cardButtons indexOfObject:sender];
     [self.game chooseCardAtIndex:chosenButtonIndex];
+    self.matchModeSegmentedControl.enabled = NO;
     [self updateUI];
-    
 }
 
 - (void)updateUI
@@ -64,6 +64,19 @@
 - (UIImage *)backgroundImageForCard:(Card *)card
 {
     return [UIImage imageNamed:card.isChosen ? @"cardfront" : @"cardback"];
+}
+
+- (IBAction)touchNewGameButton:(UIButton *)sender
+{
+    self.game = nil;
+    self.matchModeSegmentedControl.enabled = YES;
+    [self updateUI];
+}
+
+- (IBAction)matchModeSegmentedControlValueChanged:(UISegmentedControl *)sender
+{
+    NSInteger index = [sender selectedSegmentIndex];
+    [self.game setCardMatchLimit:(index + 2)];
 }
 
 @end

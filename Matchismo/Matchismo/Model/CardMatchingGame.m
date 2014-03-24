@@ -12,9 +12,28 @@
 @interface CardMatchingGame()
 @property (nonatomic, readwrite) NSInteger score;
 @property (nonatomic, strong) NSMutableArray *cards; // of Card
+@property (nonatomic, strong) NSMutableArray *matchedCards; // of Card
 @end
 
 @implementation CardMatchingGame
+
+- (NSMutableArray *)matchedCards
+{
+    if (!_matchedCards) {
+        _matchedCards = [[NSMutableArray alloc] init];
+    }
+    
+    return _matchedCards;
+}
+
+- (NSUInteger)cardMatchLimit
+{
+    if (!_cardMatchLimit) {
+        _cardMatchLimit = 2;
+    }
+    
+    return _cardMatchLimit;
+}
 
 - (NSMutableArray *)cards
 {
@@ -65,26 +84,47 @@ static const int COST_TO_CHOOSE = 1;
     //If the card is already chosen, just "unchoose it"
     if (card.isChosen) {
         card.chosen = NO;
+        return;
+    }
+    
+    if ([self.matchedCards count] > 0) {
+        for (Card *otherCard in self.matchedCards) {
+            int matchScore = [card match:@[otherCard]];
+            if (matchScore) {
+                NSUInteger multipleMatchBonus = ([self.matchedCards count] > 0) ? ([self.matchedCards count] * 4) : 1;
+                self.score += matchScore * MATCH_BONUS * multipleMatchBonus;
+            }
+        }
+        card.matched = YES;
+        [self.matchedCards addObject:card];
     } else {
         //match against other cards
         for (Card *otherCard in self.cards) {
             if (otherCard.isChosen && !otherCard.isMatched) {
                 int matchScore = [card match:@[otherCard]];
                 if (matchScore) {
-                    self.score += matchScore * MATCH_BONUS;
-                    otherCard.matched = YES;
+                    NSUInteger multipleMatchBonus = ([self.matchedCards count] > 0) ? ([self.matchedCards count] * 4) : 1;
+                    self.score += matchScore * MATCH_BONUS * multipleMatchBonus;
                     card.matched = YES;
+                    otherCard.matched = YES;
+                    if ([self.matchedCards count] == 0) {
+                        [self.matchedCards addObject:card];
+                    }
+                    [self.matchedCards addObject:otherCard];
                 } else {
                     self.score -= MISMATCH_PENALTY;
                     otherCard.chosen = NO;
                 }
-                break; // can only choose two cards for now
             }
         }
-        self.score -= COST_TO_CHOOSE;
-        card.chosen = YES;
     }
     
+    if ([self.matchedCards count] >= self.cardMatchLimit) {
+        self.matchedCards = nil;
+    }
+    
+    self.score -= COST_TO_CHOOSE;
+    card.chosen = YES;
 }
 
 @end

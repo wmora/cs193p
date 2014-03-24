@@ -11,6 +11,8 @@
 
 @interface CardMatchingGame : NSObject
 
+@property (nonatomic) NSUInteger cardMatchLimit;
+
 //designated initializer
 - (instancetype)initWithCardCount:(NSUInteger)count usingDeck:(Deck *)deck;
 
